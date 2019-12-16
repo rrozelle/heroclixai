@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace heroclixAI
 {
+    [Serializable]
     class CharacterClick
     {
         private int _SpeedValue = 0;

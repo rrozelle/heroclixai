@@ -88,6 +88,23 @@ namespace heroclixAI
                     current = current.ParentNode;
                 }
 
+            //Resets MapNodes g, h, f, and parent variables
+            foreach (MapNode Node in ClosedList)
+            {
+                Node.g = 0;
+                Node.h = 0;
+                Node.f = 0;
+                Node.ParentNode = null;
+            }
+
+            foreach (MapNode Node in OpenList)
+            {
+                Node.g = 0;
+                Node.h = 0;
+                Node.f = 0;
+                Node.ParentNode = null;
+            }
+
             //If the destination was never reached return null
             if (ShortestPath.FirstOrDefault(l => l.x == endLocation.x && l.y == endLocation.y) == null)
             {

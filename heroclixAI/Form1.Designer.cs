@@ -100,10 +100,6 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.textBoxMapFilePath = new System.Windows.Forms.TextBox();
-            this.labelMapFilePath = new System.Windows.Forms.Label();
-            this.buttonCreateNewMap = new System.Windows.Forms.Button();
-            this.groupBoxMapData = new System.Windows.Forms.GroupBox();
             this.listViewItems = new System.Windows.Forms.ListView();
             this.groupBoxItemHandling = new System.Windows.Forms.GroupBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -130,7 +126,6 @@
             this.opposingCharactersGB.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBoxWallCondition.SuspendLayout();
-            this.groupBoxMapData.SuspendLayout();
             this.groupBoxItemHandling.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBoxPickUp.SuspendLayout();
@@ -237,6 +232,7 @@
             this.whatToDoThor.TabIndex = 46;
             this.whatToDoThor.Text = "Do?";
             this.whatToDoThor.UseVisualStyleBackColor = true;
+            this.whatToDoThor.Click += new System.EventHandler(this.WhatToDoThor_Click);
             // 
             // whatToDoIronMan
             // 
@@ -247,6 +243,7 @@
             this.whatToDoIronMan.TabIndex = 45;
             this.whatToDoIronMan.Text = "Do?";
             this.whatToDoIronMan.UseVisualStyleBackColor = true;
+            this.whatToDoIronMan.Click += new System.EventHandler(this.WhatToDoIronMan_Click);
             // 
             // whatToDoCaptainAmerica
             // 
@@ -304,7 +301,7 @@
             this.locationNumericFriendlyThorCB.Name = "locationNumericFriendlyThorCB";
             this.locationNumericFriendlyThorCB.Size = new System.Drawing.Size(65, 24);
             this.locationNumericFriendlyThorCB.TabIndex = 24;
-            this.locationNumericFriendlyThorCB.Text = "1";
+            this.locationNumericFriendlyThorCB.Text = "2";
             this.locationNumericFriendlyThorCB.SelectedIndexChanged += new System.EventHandler(this.LocationNumericFriendlyThorCB_SelectedIndexChanged);
             // 
             // locationAlphaFriendlyThorCB
@@ -444,7 +441,7 @@
             this.locationAlphaFriendlyCapCB.Name = "locationAlphaFriendlyCapCB";
             this.locationAlphaFriendlyCapCB.Size = new System.Drawing.Size(65, 24);
             this.locationAlphaFriendlyCapCB.TabIndex = 19;
-            this.locationAlphaFriendlyCapCB.Text = "A";
+            this.locationAlphaFriendlyCapCB.Text = "B";
             this.locationAlphaFriendlyCapCB.SelectedIndexChanged += new System.EventHandler(this.LocationAlphaFriendlyCapCB_SelectedIndexChanged);
             // 
             // clickNumberFriendlyThor
@@ -695,7 +692,7 @@
             this.locationNumericOpposingThorCB.Name = "locationNumericOpposingThorCB";
             this.locationNumericOpposingThorCB.Size = new System.Drawing.Size(65, 24);
             this.locationNumericOpposingThorCB.TabIndex = 57;
-            this.locationNumericOpposingThorCB.Text = "1";
+            this.locationNumericOpposingThorCB.Text = "16";
             this.locationNumericOpposingThorCB.SelectedIndexChanged += new System.EventHandler(this.LocationNumericOpposingThorCB_SelectedIndexChanged);
             // 
             // locationAlphaOpposingThorCB
@@ -723,7 +720,7 @@
             this.locationAlphaOpposingThorCB.Name = "locationAlphaOpposingThorCB";
             this.locationAlphaOpposingThorCB.Size = new System.Drawing.Size(65, 24);
             this.locationAlphaOpposingThorCB.TabIndex = 56;
-            this.locationAlphaOpposingThorCB.Text = "A";
+            this.locationAlphaOpposingThorCB.Text = "O";
             this.locationAlphaOpposingThorCB.SelectedIndexChanged += new System.EventHandler(this.LocationAlphaOpposingThorCB_SelectedIndexChanged);
             // 
             // locationNumericOpposingIronManCB
@@ -751,7 +748,7 @@
             this.locationNumericOpposingIronManCB.Name = "locationNumericOpposingIronManCB";
             this.locationNumericOpposingIronManCB.Size = new System.Drawing.Size(65, 24);
             this.locationNumericOpposingIronManCB.TabIndex = 55;
-            this.locationNumericOpposingIronManCB.Text = "1";
+            this.locationNumericOpposingIronManCB.Text = "16";
             this.locationNumericOpposingIronManCB.SelectedIndexChanged += new System.EventHandler(this.LocationNumericOpposingIronManCB_SelectedIndexChanged);
             // 
             // locationAlphaOpposingIronManCB
@@ -779,7 +776,7 @@
             this.locationAlphaOpposingIronManCB.Name = "locationAlphaOpposingIronManCB";
             this.locationAlphaOpposingIronManCB.Size = new System.Drawing.Size(65, 24);
             this.locationAlphaOpposingIronManCB.TabIndex = 54;
-            this.locationAlphaOpposingIronManCB.Text = "A";
+            this.locationAlphaOpposingIronManCB.Text = "P";
             this.locationAlphaOpposingIronManCB.SelectedIndexChanged += new System.EventHandler(this.LocationAlphaOpposingIronManCB_SelectedIndexChanged);
             // 
             // locationNumericOpposingCapCB
@@ -807,7 +804,7 @@
             this.locationNumericOpposingCapCB.Name = "locationNumericOpposingCapCB";
             this.locationNumericOpposingCapCB.Size = new System.Drawing.Size(65, 24);
             this.locationNumericOpposingCapCB.TabIndex = 53;
-            this.locationNumericOpposingCapCB.Text = "1";
+            this.locationNumericOpposingCapCB.Text = "15";
             this.locationNumericOpposingCapCB.SelectedIndexChanged += new System.EventHandler(this.LocationNumericOpposingCapCB_SelectedIndexChanged);
             // 
             // locationAlphaOpposingCapCB
@@ -835,7 +832,7 @@
             this.locationAlphaOpposingCapCB.Name = "locationAlphaOpposingCapCB";
             this.locationAlphaOpposingCapCB.Size = new System.Drawing.Size(65, 24);
             this.locationAlphaOpposingCapCB.TabIndex = 52;
-            this.locationAlphaOpposingCapCB.Text = "A";
+            this.locationAlphaOpposingCapCB.Text = "P";
             this.locationAlphaOpposingCapCB.SelectedIndexChanged += new System.EventHandler(this.LocationAlphaOpposingCapCB_SelectedIndexChanged);
             // 
             // label13
@@ -867,6 +864,7 @@
             this.button7.TabIndex = 35;
             this.button7.Text = ">";
             this.button7.UseVisualStyleBackColor = true;
+            this.button7.Click += new System.EventHandler(this.Button7_Click);
             // 
             // button8
             // 
@@ -877,6 +875,7 @@
             this.button8.TabIndex = 34;
             this.button8.Text = "<";
             this.button8.UseVisualStyleBackColor = true;
+            this.button8.Click += new System.EventHandler(this.Button8_Click);
             // 
             // thorOpposingLabel
             // 
@@ -907,6 +906,7 @@
             this.button9.TabIndex = 31;
             this.button9.Text = ">";
             this.button9.UseVisualStyleBackColor = true;
+            this.button9.Click += new System.EventHandler(this.Button9_Click);
             // 
             // button10
             // 
@@ -917,6 +917,7 @@
             this.button10.TabIndex = 30;
             this.button10.Text = "<";
             this.button10.UseVisualStyleBackColor = true;
+            this.button10.Click += new System.EventHandler(this.Button10_Click);
             // 
             // ironmanOpposingLabel
             // 
@@ -947,6 +948,7 @@
             this.button11.TabIndex = 27;
             this.button11.Text = ">";
             this.button11.UseVisualStyleBackColor = true;
+            this.button11.Click += new System.EventHandler(this.Button11_Click);
             // 
             // button12
             // 
@@ -957,6 +959,7 @@
             this.button12.TabIndex = 26;
             this.button12.Text = "<";
             this.button12.UseVisualStyleBackColor = true;
+            this.button12.Click += new System.EventHandler(this.Button12_Click);
             // 
             // opposingCaptainAmericaLabel
             // 
@@ -980,7 +983,7 @@
             // 
             // previousTurnButton
             // 
-            this.previousTurnButton.Location = new System.Drawing.Point(795, 344);
+            this.previousTurnButton.Location = new System.Drawing.Point(8, 63);
             this.previousTurnButton.Margin = new System.Windows.Forms.Padding(4);
             this.previousTurnButton.Name = "previousTurnButton";
             this.previousTurnButton.Size = new System.Drawing.Size(48, 28);
@@ -991,7 +994,7 @@
             // 
             // nextTurnButton
             // 
-            this.nextTurnButton.Location = new System.Drawing.Point(847, 344);
+            this.nextTurnButton.Location = new System.Drawing.Point(64, 63);
             this.nextTurnButton.Margin = new System.Windows.Forms.Padding(4);
             this.nextTurnButton.Name = "nextTurnButton";
             this.nextTurnButton.Size = new System.Drawing.Size(48, 28);
@@ -1004,7 +1007,9 @@
             // 
             this.groupBox3.Controls.Add(this.finishTurnButton);
             this.groupBox3.Controls.Add(this.turnNumberLabel);
-            this.groupBox3.Location = new System.Drawing.Point(787, 280);
+            this.groupBox3.Controls.Add(this.nextTurnButton);
+            this.groupBox3.Controls.Add(this.previousTurnButton);
+            this.groupBox3.Location = new System.Drawing.Point(447, 271);
             this.groupBox3.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Padding = new System.Windows.Forms.Padding(4);
@@ -1026,7 +1031,7 @@
             // 
             // button13
             // 
-            this.button13.Location = new System.Drawing.Point(1058, 286);
+            this.button13.Location = new System.Drawing.Point(717, 277);
             this.button13.Name = "button13";
             this.button13.Size = new System.Drawing.Size(101, 35);
             this.button13.TabIndex = 7;
@@ -1047,7 +1052,7 @@
             this.groupBoxWallCondition.Controls.Add(this.textBoxWCFirstCell);
             this.groupBoxWallCondition.Controls.Add(this.label5);
             this.groupBoxWallCondition.Controls.Add(this.label4);
-            this.groupBoxWallCondition.Location = new System.Drawing.Point(356, 270);
+            this.groupBoxWallCondition.Location = new System.Drawing.Point(16, 270);
             this.groupBoxWallCondition.Name = "groupBoxWallCondition";
             this.groupBoxWallCondition.Size = new System.Drawing.Size(424, 144);
             this.groupBoxWallCondition.TabIndex = 9;
@@ -1157,45 +1162,6 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(100, 23);
             this.label2.TabIndex = 0;
-            // 
-            // textBoxMapFilePath
-            // 
-            this.textBoxMapFilePath.Location = new System.Drawing.Point(8, 45);
-            this.textBoxMapFilePath.Name = "textBoxMapFilePath";
-            this.textBoxMapFilePath.Size = new System.Drawing.Size(303, 22);
-            this.textBoxMapFilePath.TabIndex = 10;
-            this.textBoxMapFilePath.Text = "C:\\Users\\rozey\\Desktop\\Test.txt";
-            // 
-            // labelMapFilePath
-            // 
-            this.labelMapFilePath.AutoSize = true;
-            this.labelMapFilePath.Location = new System.Drawing.Point(5, 25);
-            this.labelMapFilePath.Name = "labelMapFilePath";
-            this.labelMapFilePath.Size = new System.Drawing.Size(94, 17);
-            this.labelMapFilePath.TabIndex = 11;
-            this.labelMapFilePath.Text = "Map File Path";
-            // 
-            // buttonCreateNewMap
-            // 
-            this.buttonCreateNewMap.Location = new System.Drawing.Point(8, 73);
-            this.buttonCreateNewMap.Name = "buttonCreateNewMap";
-            this.buttonCreateNewMap.Size = new System.Drawing.Size(122, 29);
-            this.buttonCreateNewMap.TabIndex = 12;
-            this.buttonCreateNewMap.Text = "Create New Map";
-            this.buttonCreateNewMap.UseVisualStyleBackColor = true;
-            this.buttonCreateNewMap.Click += new System.EventHandler(this.ButtonCreateNewMap_Click);
-            // 
-            // groupBoxMapData
-            // 
-            this.groupBoxMapData.Controls.Add(this.textBoxMapFilePath);
-            this.groupBoxMapData.Controls.Add(this.buttonCreateNewMap);
-            this.groupBoxMapData.Controls.Add(this.labelMapFilePath);
-            this.groupBoxMapData.Location = new System.Drawing.Point(16, 270);
-            this.groupBoxMapData.Name = "groupBoxMapData";
-            this.groupBoxMapData.Size = new System.Drawing.Size(334, 144);
-            this.groupBoxMapData.TabIndex = 13;
-            this.groupBoxMapData.TabStop = false;
-            this.groupBoxMapData.Text = "Map Data";
             // 
             // listViewItems
             // 
@@ -1513,12 +1479,9 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1515, 718);
             this.Controls.Add(this.groupBoxItemHandling);
-            this.Controls.Add(this.groupBoxMapData);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.groupBoxWallCondition);
             this.Controls.Add(this.button13);
-            this.Controls.Add(this.nextTurnButton);
-            this.Controls.Add(this.previousTurnButton);
             this.Controls.Add(this.opposingCharactersGB);
             this.Controls.Add(this.friendlyCharacterGB);
             this.Controls.Add(this.groupBox3);
@@ -1534,8 +1497,6 @@
             this.groupBox3.PerformLayout();
             this.groupBoxWallCondition.ResumeLayout(false);
             this.groupBoxWallCondition.PerformLayout();
-            this.groupBoxMapData.ResumeLayout(false);
-            this.groupBoxMapData.PerformLayout();
             this.groupBoxItemHandling.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -1619,12 +1580,8 @@
         private System.Windows.Forms.Button buttonWCCheck;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.TextBox textBoxMapFilePath;
-        private System.Windows.Forms.Label labelMapFilePath;
         private System.Windows.Forms.Button buttonCreateWall;
         private System.Windows.Forms.Button buttonBreakWall;
-        private System.Windows.Forms.Button buttonCreateNewMap;
-        private System.Windows.Forms.GroupBox groupBoxMapData;
         private System.Windows.Forms.ListView listViewItems;
         private System.Windows.Forms.GroupBox groupBoxItemHandling;
         private System.Windows.Forms.Button buttonDropItem;

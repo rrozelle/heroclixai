@@ -20,6 +20,7 @@ namespace heroclixAI
             int h = 0;
             int f = 0;
             MapNode ParentNode = null;
+            Character OccupiedByCharacter = null;
             IsOccupied = false;
             IsBlocked = false;
             IsHinderance = false;
@@ -39,6 +40,7 @@ namespace heroclixAI
         public int x { get; set; }
         public int f { get; set; }
         public MapNode ParentNode { get; set; }
+        public Character OccupiedByCharacter{ get; set; }
         public Boolean IsOccupied { get; set; }
         public Boolean IsBlocked { get; set; }
         public Boolean IsHinderance { get; set; }

@@ -19,8 +19,10 @@ namespace heroclixAI
             Boolean hinderance = false;
             MapNode mapLocation = null;
             Character character = null;
+            int itemDistanceScore = 0;
         }
 
+        public int itemDistanceScore { get; set; }
         public int ID { get; set; }
         public int range { get; set; }
         public Boolean hinderance { get; set; }
