@@ -128,6 +128,16 @@ namespace heroclixAI
             actionTokensCapFriendly.SelectedIndex = 0;
             actionTokensIronManFriendly.SelectedIndex = 0;
             actionTokensThorFriendly.SelectedIndex = 0;
+            actionTokensCapOpposing.SelectedIndex = 0;
+            actionTokensIronManOpposing.SelectedIndex = 0;
+            actionTokensThorOpposing.SelectedIndex = 0;
+
+            locationAlphaOpposingCapCB.Text = "P";
+            locationNumericOpposingCapCB.Text = "15";
+            locationAlphaOpposingIronManCB.Text = "P";
+            locationNumericOpposingIronManCB.Text = "16";
+            locationAlphaOpposingThorCB.Text = "O";
+            locationNumericOpposingThorCB.Text = "16";
 
             CreateNewMap();
             CreateCharacters();
@@ -378,14 +388,23 @@ namespace heroclixAI
             MapNode[,] gameMap = new MapNode[16,16];
             gameMap = RetrieveMap();
             MapNode Node = new MapNode();
-            Node = gameMap[0, 2];
+            Node = gameMap[15, 14];
             LinkedList<MapNode> AvoidanceList = new LinkedList<MapNode>();
 
-            AvoidanceList = FindEnemyMovementThreatZoneForCharacter(Node, false);
+            MessageBox.Show("Occupied List");
 
-            foreach (MapNode mapNode in AvoidanceList)
+            foreach (MapNode occupiedNode in IsOccupiedList)
             {
-                MessageBox.Show(ConvertColumnNumberToLetter(mapNode.x) + (mapNode.y + 1).ToString());
+                MessageBox.Show(ConvertColumnNumberToLetter(occupiedNode.x) + (occupiedNode.y + 1).ToString());
+            }
+
+            MessageBox.Show("Avoidance List for Flying Characters.");
+
+            AvoidanceList = FindEnemyMovementThreatZoneForCharacter(true);
+
+            foreach (MapNode avoidNode in AvoidanceList)
+            {
+                MessageBox.Show(ConvertColumnNumberToLetter(avoidNode.x).ToString() + (avoidNode.y + 1).ToString());
             }
         }
 
@@ -2095,7 +2114,9 @@ namespace heroclixAI
         }
 
         //Searches for the nearest MapNode to the location. It takes many arguments to edit the search. Returns null if no path found.
-        private MapNode FindNearestMapNodeToTargetLocation(MapNode startingPosition, MapNode targetLocation, int distanceFromTargetMin = 1, int distanceFromTargetMax = 1, Boolean collectHinderance = true, Boolean collectOnlyLineOfSight = true)
+        private MapNode FindNearestMapNodeToTargetLocation(MapNode startingPosition, MapNode targetLocation, 
+            int distanceFromTargetMin = 1, int distanceFromTargetMax = 1, Boolean collectHinderance = true, 
+            Boolean collectOnlyLineOfSight = true, LinkedList<MapNode> avoidanceList = null)
         {
             //Setup linkedlist, gameMap, lineOfSight, and pathfinder
             LinkedList<MapNode> PossibleTargetLocations = new LinkedList<MapNode>();
@@ -2103,9 +2124,21 @@ namespace heroclixAI
             MapNode[,] gameMap = new MapNode[16, 16];
             gameMap = RetrieveMap();
             LineOfSight lineOfSight = new LineOfSight();
+            LinkedList<MapNode> IsReachable = new LinkedList<MapNode>();
+
+            //Remove targetLocation from avoidance list
+            if (avoidanceList != null)
+            {
+                if (avoidanceList.FirstOrDefault(l => l.x == targetLocation.x && l.y == targetLocation.y) != null)
+                {
+                    avoidanceList.Remove(targetLocation);
+                }
+            }
 
             //First check the target location if it is reachable
-            if (pathfinder.FindShortestPath(startingPosition, targetLocation, gameMap).Count > 0 &&
+            IsReachable = pathfinder.FindShortestPath(startingPosition, targetLocation, gameMap, true, avoidanceList);
+
+            if (IsReachable != null && IsReachable.Count > 0 &&
                 gameMap[targetLocation.x, targetLocation.y].IsOccupied == false &&
                 gameMap[targetLocation.x, targetLocation.y].IsBlocked == false)
             {
@@ -2114,12 +2147,16 @@ namespace heroclixAI
                 {
                     case true:
                         {
+                            //Re-add the previously removed targetnode to the list then return MapNode
+                            avoidanceList.AddLast(targetLocation);
                             return gameMap[targetLocation.x, targetLocation.y];
                         }
                     case false:
                         {
                             if (gameMap[targetLocation.x, targetLocation.y].IsHinderance == false)
                             {
+                                //Re-add the previously removed targetnode to the list then return MapNode
+                                avoidanceList.AddLast(targetLocation);
                                 return gameMap[targetLocation.x, targetLocation.y];
                             }
 
@@ -2127,6 +2164,9 @@ namespace heroclixAI
                         }
                 }
             }
+
+            //Re-add the previously removed targetnode to the list
+            avoidanceList.AddLast(targetLocation);
 
             //Continue on to collect possible Mapnode locations that can be targeted
             for (int i = distanceFromTargetMin; i <= distanceFromTargetMax; i++)
@@ -2166,9 +2206,30 @@ namespace heroclixAI
                             }
                         }
 
-                        //Check if it is reachable from starting location
-                        if (pathfinder.FindShortestPath(startingPosition, current, gameMap) == null)
+                        //Remove current MapNode from avoidanceList. It will be added again at the end of this series of checks
+                        Boolean removed = false;
+                        MapNode ListNode = new MapNode();
+
+                        if (avoidanceList != null)
                         {
+                            ListNode = avoidanceList.FirstOrDefault(l => l.x == current.x && l.y == current.y);
+
+                            if (ListNode != null)
+                            {
+                                avoidanceList.Remove(ListNode);
+                                removed = true;
+                            }
+                        }
+
+                        //Check if it is reachable from starting location
+                        if (pathfinder.FindShortestPath(startingPosition, current, gameMap, true, avoidanceList) == null)
+                        {
+                            //Re-add the mapNode if it was removed from the avoidance list
+                            if (removed == true)
+                            {
+                                avoidanceList.AddLast(ListNode);
+                                removed = false;
+                            }
                             continue;
                         }
 
@@ -2177,6 +2238,12 @@ namespace heroclixAI
                         DistanceCount = pathfinder.FindShortestPath(targetLocation, current, gameMap);
                         if (DistanceCount.Count < distanceFromTargetMin)
                         {
+                            //Re-add the mapNode if it was removed from the avoidance list
+                            if (removed == true)
+                            {
+                                avoidanceList.AddLast(ListNode);
+                                removed = false;
+                            }
                             continue;
                         }
 
@@ -2192,6 +2259,13 @@ namespace heroclixAI
                         {
                             PossibleTargetLocations.AddLast(current);
                         }
+
+                        //Re-add the mapNode if it was removed from the avoidance list
+                        if (removed == true)
+                        {
+                            avoidanceList.AddLast(ListNode);
+                            removed = false;
+                        }
                     }
                 }                
             }
@@ -2206,7 +2280,7 @@ namespace heroclixAI
             MapNode nearestNode = new MapNode();
             LinkedList<MapNode> Count = new LinkedList<MapNode>();
             nearestNode = PossibleTargetLocations.First();
-            Count = pathfinder.FindShortestPath(startingPosition, nearestNode, gameMap);
+            Count = pathfinder.FindShortestPath(startingPosition, nearestNode, gameMap, false);
             int steps = Count.Count;
 
             foreach (MapNode Node in PossibleTargetLocations)
@@ -2380,7 +2454,7 @@ namespace heroclixAI
 
                 if (distance == 1)
                 {
-                    distance = 6;
+                    distance = 8;
                 }
                 else if (distance > 1 && distance <= EnemyIronMan.clicks[Convert.ToInt32(clickNumberOpposingIronman.Text)].RangeValue)
                 {
@@ -2440,7 +2514,7 @@ namespace heroclixAI
 
                 if (distance == 1)
                 {
-                    distance = 7;
+                    distance = 8;
                 }
                 else if (distance > 1 && distance <= EnemyCaptainAmerica.clicks[Convert.ToInt32(clickNumberOpposingCap.Text)].RangeValue)
                 {
@@ -2831,6 +2905,10 @@ namespace heroclixAI
                             {
                                 character.SpecialAbilityUsed = true;
                                 MessageBox.Show("Use Lightning Smash.",character._CharacterName);
+
+                                //Increase Token Count
+                                actionTokensThorFriendly.Text = (Convert.ToInt32(actionTokensThorFriendly.Text) + 1).ToString();
+
                                 return;
                             }
 
@@ -2872,14 +2950,21 @@ namespace heroclixAI
                             //Check Abilities
                             //Dealing with Charge
                             MapNode targetMapNode = new MapNode();
-                            targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 1, false, true);
+                            LinkedList<MapNode> AvoidanceListCharge = new LinkedList<MapNode>();
 
+                            AvoidanceListCharge = FindEnemyMovementThreatZoneForCharacter(true);
+                            targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 1, false, true, AvoidanceListCharge);
+                            
                             if (targetMapNode != null)
                             {
-                                LinkedList<MapNode> MovementList = new LinkedList<MapNode>();
-                                LinkedList<MapNode> AvoidanceListCharge = new LinkedList<MapNode>();
+                                //Remove the targetMapNode from the Avoidance List if it is on the list
+                                if (AvoidanceListCharge.FirstOrDefault(l => l.x == targetMapNode.x && l.y == targetMapNode.y) != null)
+                                {
+                                    AvoidanceListCharge.Remove(targetMapNode);
+                                }
 
-                                AvoidanceListCharge = FindEnemyMovementThreatZoneForCharacter(targetMapNode, true);
+                                LinkedList<MapNode> MovementList = new LinkedList<MapNode>();
+                                
                                 MovementList = pathfinder.FindShortestPath(characterLocation, targetMapNode, gameMap, true, AvoidanceListCharge);
 
                                 if (MovementList.Count < 6 &&
@@ -2912,14 +2997,19 @@ namespace heroclixAI
                             //Dealing with Running Shot
                             LinkedList<MapNode> Movement = new LinkedList<MapNode>();
                             MapNode movementCheck = new MapNode();
+                            LinkedList<MapNode> AvoidanceListRunningShot = new LinkedList<MapNode>();
 
-                            targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 2, 4, false, true);
+                            AvoidanceListRunningShot = FindEnemyMovementThreatZoneForCharacter(true);
+                            targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 2, 4, false, true, AvoidanceListRunningShot);
 
                             if (targetMapNode != null)
                             {
-                                LinkedList<MapNode> AvoidanceListRunningShot = new LinkedList<MapNode>();
+                                //Remove the targetMapNode from the Avoidance List if it is on the list
+                                if (AvoidanceListRunningShot.FirstOrDefault(l => l.x == targetMapNode.x && l.y == targetMapNode.y) != null)
+                                {
+                                    AvoidanceListRunningShot.Remove(targetMapNode);
+                                }
 
-                                AvoidanceListRunningShot = FindEnemyMovementThreatZoneForCharacter(targetMapNode, true);
                                 Movement = pathfinder.FindShortestPath(characterLocation, targetMapNode, gameMap, true, AvoidanceListRunningShot);
                                 
                                 if (Movement != null)
@@ -2956,13 +3046,19 @@ namespace heroclixAI
                             if (distance < 3 && 
                                 character.abilities[Convert.ToInt32(clickNumberFriendlyThor.Text)]._SideStep == true)
                             {
-                                targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 1, false, false);
+                                LinkedList<MapNode> AvoidanceListSideStep = new LinkedList<MapNode>();
+
+                                AvoidanceListSideStep = FindEnemyMovementThreatZoneForCharacter(true);
+                                targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 1, false, false, AvoidanceListSideStep);
 
                                 if (targetMapNode != null)
                                 {
-                                    LinkedList<MapNode> AvoidanceListSideStep = new LinkedList<MapNode>();
+                                    //Remove the targetMapNode from the Avoidance List if it is on the list
+                                    if (AvoidanceListSideStep.FirstOrDefault(l => l.x == targetMapNode.x && l.y == targetMapNode.y) != null)
+                                    {
+                                        AvoidanceListSideStep.Remove(targetMapNode);
+                                    }
 
-                                    AvoidanceListSideStep = FindEnemyMovementThreatZoneForCharacter(targetMapNode, true);
                                     Movement = pathfinder.FindShortestPath(characterLocation, targetMapNode, gameMap, true, AvoidanceListSideStep);
 
                                     string MovementSideStep = "";
@@ -2990,23 +3086,38 @@ namespace heroclixAI
                             }
 
                             //Moving normally
-                            targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 1, false, true);
+                            LinkedList<MapNode> AvoidanceList = new LinkedList<MapNode>();
+
+                            AvoidanceList = FindEnemyMovementThreatZoneForCharacter(true);
+                            targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 1, false, true, AvoidanceList);
+
+                            if (targetMapNode != null)
+                            {
+                                //Remove the targetMapNode from the Avoidance List if it is on the list
+                                if (AvoidanceList.FirstOrDefault(l => l.x == targetMapNode.x && l.y == targetMapNode.y) != null)
+                                {
+                                    AvoidanceList.Remove(targetMapNode);
+                                }
+                            }
 
                             if (targetMapNode == null)
                             {
                                 targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 3, false, false);
+                                
+                                //Remove the targetMapNode from the Avoidance List if it is on the list
+                                if (AvoidanceList.FirstOrDefault(l => l.x == targetMapNode.x && l.y == targetMapNode.y) != null)
+                                {
+                                    AvoidanceList.Remove(targetMapNode);
+                                }
                             }
 
-                            LinkedList<MapNode> AvoidanceList = new LinkedList<MapNode>();
-
-                            AvoidanceList = FindEnemyMovementThreatZoneForCharacter(targetMapNode, true);
                             Movement = pathfinder.FindShortestPath(characterLocation, targetMapNode, gameMap, true, AvoidanceList);
                             string movement = "";
                             int max;
 
                             if (character.clicks[Convert.ToInt32(clickNumberFriendlyThor.Text)].SpeedValue >= Movement.Count)
                             {
-                                max = Movement.Count - 1;
+                                max = Movement.Count;
                             }
                             else
                             {
@@ -3277,14 +3388,19 @@ namespace heroclixAI
                             MapNode targetMapNode = new MapNode();
                             LinkedList<MapNode> Movement = new LinkedList<MapNode>();
                             MapNode movementCheck = new MapNode();
+                            LinkedList<MapNode> AvoidanceListRunningShot = new LinkedList<MapNode>();
 
-                            targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 3, 6, false, true);
+                            AvoidanceListRunningShot = FindEnemyMovementThreatZoneForCharacter(true);
+                            targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 3, 6, false, true, AvoidanceListRunningShot);
 
                             if (targetMapNode != null)
                             {
-                                LinkedList<MapNode> AvoidanceListRunningShot = new LinkedList<MapNode>();
+                                //Remove the targetMapNode from the Avoidance List if it is on the list
+                                if (AvoidanceListRunningShot.FirstOrDefault(l => l.x == targetMapNode.x && l.y == targetMapNode.y) != null)
+                                {
+                                    AvoidanceListRunningShot.Remove(targetMapNode);
+                                }
 
-                                AvoidanceListRunningShot = FindEnemyMovementThreatZoneForCharacter(targetMapNode, true);
                                 Movement = pathfinder.FindShortestPath(characterLocation, targetMapNode, gameMap, true, AvoidanceListRunningShot);
 
                                 if (Movement != null)
@@ -3317,15 +3433,21 @@ namespace heroclixAI
                             }
 
                             //Dealing with Sidestep
+                            LinkedList<MapNode> AvoidanceListSideStep = new LinkedList<MapNode>();
+
+                            AvoidanceListSideStep = FindEnemyMovementThreatZoneForCharacter(true);
                             if (character.abilities[Convert.ToInt32(clickNumberFriendlyIronMan.Text)]._SideStep == true)
                             {
-                                targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 2, 3, false, true);
+                                targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 2, 3, false, true, AvoidanceListSideStep);
 
                                 if (targetMapNode != null)
                                 {
-                                    LinkedList<MapNode> AvoidanceListSideStep = new LinkedList<MapNode>();
+                                    //Remove the targetMapNode from the Avoidance List if it is on the list
+                                    if (AvoidanceListSideStep.FirstOrDefault(l => l.x == targetMapNode.x && l.y == targetMapNode.y) != null)
+                                    {
+                                        AvoidanceListSideStep.Remove(targetMapNode);
+                                    }
 
-                                    AvoidanceListSideStep = FindEnemyMovementThreatZoneForCharacter(targetMapNode, true);
                                     Movement = pathfinder.FindShortestPath(characterLocation, targetMapNode, gameMap, true, AvoidanceListSideStep);
 
                                     if (Movement.Count < 3)
@@ -3528,7 +3650,10 @@ namespace heroclixAI
 
                             //Moving normally
                             //First check for an optimal position then any nearby position
-                            targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 3, 6, false, true);
+                            LinkedList<MapNode> AvoidanceList = new LinkedList<MapNode>();
+
+                            AvoidanceList = FindEnemyMovementThreatZoneForCharacter(true);
+                            targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 3, 6, false, true, AvoidanceList);
 
                             if (targetMapNode == null)
                             {
@@ -3540,16 +3665,19 @@ namespace heroclixAI
                                 targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 2, 3, false, false);
                             }
 
-                            LinkedList<MapNode> AvoidanceList = new LinkedList<MapNode>();
+                            //Remove the targetMapNode from the Avoidance List if it is on the list
+                            if (AvoidanceList.FirstOrDefault(l => l.x == targetMapNode.x && l.y == targetMapNode.y) != null)
+                            {
+                                AvoidanceList.Remove(targetMapNode);
+                            }
 
-                            AvoidanceList = FindEnemyMovementThreatZoneForCharacter(targetMapNode, true);
                             Movement = pathfinder.FindShortestPath(characterLocation, targetMapNode, gameMap, true, AvoidanceList);
                             string movement = "";
                             int max;
 
                             if (character.clicks[Convert.ToInt32(clickNumberFriendlyIronMan.Text)].SpeedValue >= Movement.Count)
                             {
-                                max = Movement.Count - 1;
+                                max = Movement.Count;
                             }
                             else
                             {
@@ -3800,17 +3928,24 @@ namespace heroclixAI
                                 //Check Abilities
                                 //Dealing with Charge
                                 MapNode targetMapNode = new MapNode();
-                                targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 1, false, true);
+                                LinkedList<MapNode> AvoidanceListCharge = new LinkedList<MapNode>();
+
+                                AvoidanceListCharge = FindEnemyMovementThreatZoneForCharacter(false);
+                                targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 1, false, true, AvoidanceListCharge);
 
                                 if (targetMapNode != null)
                                 {
-                                    LinkedList<MapNode> MovementList = new LinkedList<MapNode>();
-                                    LinkedList<MapNode> AvoidanceListCharge = new LinkedList<MapNode>();
+                                    //Remove the targetMapNode from the Avoidance List if it is on the list
+                                    if (AvoidanceListCharge.FirstOrDefault(l => l.x == targetMapNode.x && l.y == targetMapNode.y) != null)
+                                    {
+                                        AvoidanceListCharge.Remove(targetMapNode);
+                                    }
 
-                                    AvoidanceListCharge = FindEnemyMovementThreatZoneForCharacter(targetMapNode, false);
+                                    LinkedList<MapNode> MovementList = new LinkedList<MapNode>();
+                                    
                                     MovementList = pathfinder.FindShortestPath(characterLocation, targetMapNode, gameMap, true, AvoidanceListCharge);
 
-                                    if (MovementList.Count < 5 &&
+                                    if (MovementList != null && MovementList.Count < 5 &&
                                         character.abilities[Convert.ToInt32(clickNumberFriendlyCap.Text)]._Charge == true)
                                     {
                                         string movementCharge = "";
@@ -3843,13 +3978,19 @@ namespace heroclixAI
                                 if (distance < 3 &&
                                     character.abilities[Convert.ToInt32(clickNumberFriendlyCap.Text)]._SideStep == true)
                                 {
-                                    targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 1, false, false);
+                                    LinkedList<MapNode> AvoidanceListSideStep = new LinkedList<MapNode>();
+
+                                    AvoidanceListSideStep = FindEnemyMovementThreatZoneForCharacter(false);
+                                    targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 1, false, false, AvoidanceListSideStep);
 
                                     if (targetMapNode != null)
                                     {
-                                        LinkedList<MapNode> AvoidanceListSideStep = new LinkedList<MapNode>();
+                                        //Remove the targetMapNode from the Avoidance List if it is on the list
+                                        if (AvoidanceListSideStep.FirstOrDefault(l => l.x == targetMapNode.x && l.y == targetMapNode.y) != null)
+                                        {
+                                            AvoidanceListSideStep.Remove(targetMapNode);
+                                        }
 
-                                        AvoidanceListSideStep = FindEnemyMovementThreatZoneForCharacter(targetMapNode, false);
                                         Movement = pathfinder.FindShortestPath(characterLocation, targetMapNode, gameMap, true, AvoidanceListSideStep);
 
                                         string MovementSideStep = "";
@@ -4048,22 +4189,33 @@ namespace heroclixAI
                                 }
 
                                 //Moving normally
-                                targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 1, false, true);
+                                LinkedList<MapNode> AvoidanceList = new LinkedList<MapNode>();
+
+                                AvoidanceList = FindEnemyMovementThreatZoneForCharacter(false);
+                                targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 1, false, true, AvoidanceList);
 
                                 if (targetMapNode == null)
                                 {
-                                    targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 3, false, false);
+                                    targetMapNode = FindNearestMapNodeToTargetLocation(characterLocation, enemyLocation, 1, 3, false, false, AvoidanceList);
                                 }
-                                LinkedList<MapNode> AvoidanceList = new LinkedList<MapNode>();
 
-                                AvoidanceList = FindEnemyMovementThreatZoneForCharacter(targetMapNode, false);
+                                //Remove the targetMapNode from the Avoidance List if it is on the list
+                                MapNode ReMoveNode = new MapNode();
+
+                                ReMoveNode = AvoidanceList.FirstOrDefault(l => l.x == targetMapNode.x && l.y == targetMapNode.y);
+
+                                if (ReMoveNode != null)
+                                {
+                                    AvoidanceList.Remove(ReMoveNode);
+                                }
+
                                 Movement = pathfinder.FindShortestPath(characterLocation, targetMapNode, gameMap, true, AvoidanceList);
                                 string movement = "";
                                 int max;
 
                                 if (character.clicks[Convert.ToInt32(clickNumberFriendlyCap.Text)].SpeedValue >= Movement.Count)
                                 {
-                                    max = Movement.Count - 1;
+                                    max = Movement.Count;
                                 }
                                 else
                                 {
@@ -4261,8 +4413,8 @@ namespace heroclixAI
             return columnLetter;
         }
 
-        //Builds a list for the pathfinder of MapNodes it needs to avoid except for the targetLocation
-        private LinkedList<MapNode> FindEnemyMovementThreatZoneForCharacter(MapNode targetLocation, Boolean trueForFlyingCharacters)
+        //Builds a list for the pathfinder of MapNodes it needs to avoid
+        private LinkedList<MapNode> FindEnemyMovementThreatZoneForCharacter(Boolean trueForFlyingCharacters)
         {
             //Setup
             Pathfinder pathfinder = new Pathfinder();
@@ -4308,11 +4460,10 @@ namespace heroclixAI
                                     testingNode = gameMap[MaxCap(Node.x + x, 15, 0), MaxCap(Node.y + y, 15, 0)];
                                     Distance = pathfinder.FindShortestPath(testingNode, Node, gameMap);
 
-                                    //Add MapNode to list if it is not a duplicate, is one step away from target, and not the target location
+                                    //Add MapNode to list if it is not a duplicate, and is one step away from target
                                     if (Distance != null && 
                                         Distance.Count == 1 &&
-                                        NewThreatZoneList.FirstOrDefault(l => l.x == testingNode.x && l.y == testingNode.y) == null &&
-                                        (testingNode.x != targetLocation.x || testingNode.y != targetLocation.y) == true)
+                                        NewThreatZoneList.FirstOrDefault(l => l.x == testingNode.x && l.y == testingNode.y) == null)
                                     {
                                         NewThreatZoneList.AddLast(testingNode);
                                     }
