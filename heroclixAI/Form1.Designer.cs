@@ -980,6 +980,7 @@
             this.turnNumberLabel.Size = new System.Drawing.Size(16, 17);
             this.turnNumberLabel.TabIndex = 3;
             this.turnNumberLabel.Text = "1";
+            this.turnNumberLabel.TextChanged += new System.EventHandler(this.TurnNumberChanged);
             // 
             // previousTurnButton
             // 

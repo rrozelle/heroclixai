@@ -32,6 +32,11 @@ namespace heroclixAI
         Character IronMan = new Character();
         Character EnemyIronMan = new Character();
 
+        //For adding a little randomness on who the AI views as the greater threat
+        int enemyThorRandomThreatLevel;
+        int enemyIronManRandomThreatLevel;
+        int enemyCaptainAmericaRandomThreatLevel;
+
         public mainForm()
         {
             InitializeComponent();
@@ -143,6 +148,16 @@ namespace heroclixAI
             CreateCharacters();
             UpdateListViewItems();
             UpdateCharacterLocations();
+            RandomizeRandomThreatLevel();
+        }
+
+        private void RandomizeRandomThreatLevel()
+        {
+            Random random = new Random();
+
+            enemyThorRandomThreatLevel = random.Next(3);
+            enemyIronManRandomThreatLevel = random.Next(3);
+            enemyCaptainAmericaRandomThreatLevel = random.Next(3);
         }
 
         private void nextTurnButton_Click(object sender, EventArgs e)
@@ -385,27 +400,10 @@ namespace heroclixAI
         //This is for the test button and used for testing code
         private void Button13_Click(object sender, EventArgs e)
         {
-            MapNode[,] gameMap = new MapNode[16,16];
-            gameMap = RetrieveMap();
-            MapNode Node = new MapNode();
-            Node = gameMap[15, 14];
-            LinkedList<MapNode> AvoidanceList = new LinkedList<MapNode>();
-
-            MessageBox.Show("Occupied List");
-
-            foreach (MapNode occupiedNode in IsOccupiedList)
-            {
-                MessageBox.Show(ConvertColumnNumberToLetter(occupiedNode.x) + (occupiedNode.y + 1).ToString());
-            }
-
-            MessageBox.Show("Avoidance List for Flying Characters.");
-
-            AvoidanceList = FindEnemyMovementThreatZoneForCharacter(true);
-
-            foreach (MapNode avoidNode in AvoidanceList)
-            {
-                MessageBox.Show(ConvertColumnNumberToLetter(avoidNode.x).ToString() + (avoidNode.y + 1).ToString());
-            }
+            MessageBox.Show("Random Threat Levels\n" +
+                "Thor: " + enemyThorRandomThreatLevel + "\n" +
+                "IronMan: " + enemyIronManRandomThreatLevel + "\n" +
+                "Captain America: " + enemyCaptainAmericaRandomThreatLevel);
         }
 
         private MapNode[,] CreateMap()
@@ -524,7 +522,8 @@ namespace heroclixAI
                 (x+1 > 3 && x+1 < 6) && y+1 == 7 || //D7 - E7
                 x+1 == 6 && (y+1 > 7 && y+1 < 10) || //F8 - F9
                 x+1 == 16 && (y+1 > 0 && y+1 < 17) || //P1 - P16
-                (x+1 > 0 && x+1 < 17) && y+1 == 16) // A16 - P16
+                (x+1 > 0 && x+1 < 17) && y+1 == 16 || // A16 - P16
+                x+1 == 10 && y+1 == 4) //J4
             {
                 node.IsConnectedToSouthEastNode = false;
             }
@@ -2166,7 +2165,10 @@ namespace heroclixAI
             }
 
             //Re-add the previously removed targetnode to the list
-            avoidanceList.AddLast(targetLocation);
+            if (avoidanceList != null)
+            {
+                avoidanceList.AddLast(targetLocation);
+            }
 
             //Continue on to collect possible Mapnode locations that can be targeted
             for (int i = distanceFromTargetMin; i <= distanceFromTargetMax; i++)
@@ -2436,7 +2438,8 @@ namespace heroclixAI
                 enemyThor = 0;
             }
 
-            EnemyThor.threatLevel = enemyThor;
+            //Add the randomized threat level to the total
+            EnemyThor.threatLevel = enemyThor + enemyThorRandomThreatLevel;
 
             //Calculate Iron Man's Threat number starting with distance
             if (EnemyIronMan._TotalClicks >= Convert.ToInt32(clickNumberOpposingIronman.Text))
@@ -2496,7 +2499,8 @@ namespace heroclixAI
                 enemyIronMan = 0;
             }
 
-            EnemyIronMan.threatLevel = enemyIronMan;
+            //Add the randomized threat level to the total
+            EnemyIronMan.threatLevel = enemyIronMan + enemyIronManRandomThreatLevel;
 
             //Calculate Captain America's Threat number starting with distance
             if (EnemyCaptainAmerica._TotalClicks >= Convert.ToInt32(clickNumberOpposingCap.Text))
@@ -2556,7 +2560,8 @@ namespace heroclixAI
                 enemyCaptainAmerica = 0;
             }
 
-            EnemyCaptainAmerica.threatLevel = enemyCaptainAmerica;
+            //Add the randomized threat level to the total
+            EnemyCaptainAmerica.threatLevel = enemyCaptainAmerica + enemyCaptainAmericaRandomThreatLevel;
 
             if (enemyThor >= enemyIronMan && enemyThor >= enemyCaptainAmerica)
             {
@@ -2594,7 +2599,7 @@ namespace heroclixAI
                         }
                         else if (Convert.ToInt32(actionTokensThorFriendly.Text) == 1)
                         {
-                            clearActionTokenScore = 1;
+                            clearActionTokenScore = 3;
                         }
                         else
                         {
@@ -2610,7 +2615,7 @@ namespace heroclixAI
                         }
                         else if (Convert.ToInt32(actionTokensIronManFriendly.Text) == 1)
                         {
-                            clearActionTokenScore = 1;
+                            clearActionTokenScore = 3;
                         }
                         else
                         {
@@ -2626,7 +2631,7 @@ namespace heroclixAI
                         }
                         else if (Convert.ToInt32(actionTokensCapFriendly.Text) == 1)
                         {
-                            clearActionTokenScore = 1;
+                            clearActionTokenScore = 3;
                         }
                         else
                         {
@@ -4476,6 +4481,15 @@ namespace heroclixAI
             }
 
             return null;
+        }
+
+        //Whenever the end turn number equals 1 again, reset the random threat level numbers the AI places on characters
+        private void TurnNumberChanged(object sender, EventArgs e)
+        {
+            if (turnNumberLabel.Text == "1")
+            {
+                RandomizeRandomThreatLevel();
+            }
         }
     }
 }
